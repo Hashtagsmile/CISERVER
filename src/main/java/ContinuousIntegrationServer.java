@@ -2,10 +2,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.lang.Runtime;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -14,6 +17,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.google.gson.Gson;
 import org.eclipse.jetty.util.ajax.JSON;
+import org.omg.SendingContext.RunTime;
 
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -49,6 +53,41 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
+    public void cloneRepo(String url) throws IOException, InterruptedException {
+        String tempDir = " ./clonedRepo"; //This path can be changed
+        System.out.println("Temporary directory to clone to: " + tempDir);
+        System.out.println("Cloning repository...");
+        Process process = Runtime.getRuntime().exec("git clone " + url + tempDir);
+        process.waitFor();
+        System.out.println("Successfully cloned repository!");
+    }
+
+    public void installAndCompileRepo() throws IOException {
+        //Install
+        Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Maven install: " + process.exitValue());
+
+        //Compile
+        Process compileProcess = Runtime.getRuntime().exec("mvn compile -f " + "./clonedRepo");
+        try {
+            compileProcess.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
+        StringBuilder outputFromCommand = new StringBuilder();
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            outputFromCommand.append(line);
+        }
+        System.out.println("Maven compile: " + outputFromCommand);
+    }
+
 
     public void handle(String target,
                        Request baseRequest,
@@ -59,10 +98,17 @@ public class ContinuousIntegrationServer extends AbstractHandler
         response.setStatus(HttpServletResponse.SC_OK);
         baseRequest.setHandled(true);
 
-        // here you do all the continuous integration tasks
-        // for example
-        // 1st clone your repository
-        // 2nd compile the code
+
+        String clone_url = "https://github.com/Hashtagsmile/CISERVER.git";
+        try {
+            cloneRepo(clone_url);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Could not clone repo: " + e);
+        }
+
+        //String dir = System.getProperty("user.dir");
+        installAndCompileRepo();
+
 
         String reqString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         HashMap<String, String> extractedInfo;
@@ -78,6 +124,9 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         response.getWriter().println("CI job done");
     }
+
+
+    //TODO: Notifications
 
 
     // used to start the CI server in command line
