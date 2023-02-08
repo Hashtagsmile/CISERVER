@@ -29,13 +29,12 @@ public class Notifications {
 
 
     // Send an HTTP POST to GitHub API to update the status for a given commit
-    public void post_status( String OwnerName, String RepoName, String SHA, String status, String description , String targetURL) throws IOException{
+    public void post_status( String OwnerName, String RepoName, String SHA, String state, String description) throws IOException{
 
         URL url = new URL("https://api.github.com/repos/" + OwnerName + "/" + RepoName + "/statuses/" + SHA);
 
         String postString = "{\n" +
-                "  \"state\": \"" + status + "\",\n" +
-                (targetURL != null ? "  \"target_url\": \"" + targetURL + "\",\n" : "") +
+                "  \"state\": \"" + state + "\",\n" +
                 "  \"description\": \"" + description + "\",\n" +
                 "}";
 

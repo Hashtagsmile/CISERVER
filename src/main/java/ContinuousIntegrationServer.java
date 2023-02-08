@@ -24,6 +24,7 @@ import com.google.gson.Gson;
  */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
+    private Notifications notif;
     // Takes a JSON string as an input and converts it to a JSON object.
     // Necessary properties/attributes are retrieved and stored in a hashmap
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
@@ -155,6 +156,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         String reqString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         HashMap<String, String> extractedInfo;
+        notif = new Notifications();
         if(!reqString.isEmpty()) {
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
@@ -162,6 +164,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 String clone_url = extractedInfo.get("CloneUrl");
                 cloneRepo(clone_url,extractedInfo.get("BranchName"));
                 extractedInfo = installAndCompileRepo(extractedInfo);
+                notif.post_status(extractedInfo.get("Owner"),
+                        extractedInfo.get("Repo"),
+                        extractedInfo.get("SHA"),
+                        extractedInfo.get("Status"),
+                        "Placeholder Description");
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
