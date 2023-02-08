@@ -5,7 +5,6 @@ import javax.servlet.ServletException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.lang.Runtime;
@@ -16,8 +15,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.google.gson.Gson;
-import org.eclipse.jetty.util.ajax.JSON;
-import org.omg.SendingContext.RunTime;
 
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -35,7 +32,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
         try{
             //Retrieves the clone url
-            hm.put("CloneUrl", String.valueOf(jsonObject.getAsJsonObject("repository").get("clone_url")));
+            hm.put("CloneUrl", jsonObject.getAsJsonObject("repository").get("clone_url").toString());
         } catch (Exception e){
             throw new Exception("Something wrong with github url, error: " + e);
         }
@@ -53,12 +50,16 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
-    public void cloneRepo(String url) throws IOException, InterruptedException {
+    public void cloneRepo(String cloneUrl) throws IOException, InterruptedException {
         String tempDir = " ./clonedRepo"; //This path can be changed
         System.out.println("Temporary directory to clone to: " + tempDir);
-        System.out.println("Cloning repository...");
-        Process process = Runtime.getRuntime().exec("git clone " + url + tempDir);
+        System.out.println("Cloning repository...: " + cloneUrl);
+        String command = "git clone " + cloneUrl + tempDir;
+        String newCommand = command.replaceAll("\"", "");
+        System.out.println(newCommand);
+        Process process = Runtime.getRuntime().exec(newCommand);
         process.waitFor();
+        System.out.println(process.exitValue());
         System.out.println("Successfully cloned repository!");
     }
 
@@ -99,23 +100,21 @@ public class ContinuousIntegrationServer extends AbstractHandler
         baseRequest.setHandled(true);
 
 
-        String clone_url = "https://github.com/Hashtagsmile/CISERVER.git";
-        try {
-            cloneRepo(clone_url);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Could not clone repo: " + e);
-        }
-
-        //String dir = System.getProperty("user.dir");
-        installAndCompileRepo();
-
-
         String reqString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         HashMap<String, String> extractedInfo;
         if(!reqString.isEmpty()) {
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
                 extractedInfo = handleJSONObject(jsonObject);
+                String clone_url = extractedInfo.get("CloneUrl");
+                try {
+                    cloneRepo(clone_url);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Could not clone repo: " + e);
+                }
+
+                installAndCompileRepo();
+
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
