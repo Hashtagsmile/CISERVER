@@ -154,7 +154,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         // 2nd compile the code
 
         String reqString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        HashMap<String, String> extractedInfo;
+        HashMap<String, String> extractedInfo = new HashMap<String, String>();
         if(!reqString.isEmpty()) {
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
@@ -168,8 +168,24 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
             System.out.println("JSON parsed: " + extractedInfo);
         }
-
-        response.getWriter().println("CI job done");
+        boolean compRes = false;
+        boolean testRes = false;
+        if(extractedInfo.containsKey("Status")){
+            compRes = extractedInfo.get("Status").equals("Success");
+        }
+        //do the tests
+        if(compRes){
+            testRes = Features.testRepo("./clonedRepo");
+            if(!testRes){
+                response.getWriter().println("Tests failed");
+            }
+            else{
+                response.getWriter().println("CI job done");
+            }
+        }
+        else{
+            response.getWriter().println("Compilation failed");
+        }
     }
 
 
