@@ -98,7 +98,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     // Executes maven commands for installing and compiling the cloned repository
     // Flags are used to check if the commands was successfull.
-    public void installAndCompileRepo() throws IOException {
+    public HashMap<String,String> installAndCompileRepo(HashMap<String,String> map) throws IOException {
         //Install
         Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
         try {
@@ -122,12 +122,20 @@ public class ContinuousIntegrationServer extends AbstractHandler
         while ((line = reader.readLine()) != null) {
             if(line.contains("SUCCESS")){
                 compileFlag = true;
+                map.put("Status","Success");
+                System.out.println("status success");
+                break;
             }
             outputFromCommand.append(line);
         }
+           if (!compileFlag) {
+               map.put("Status", "Error");
+               System.out.println("status error");
+           }
+
         System.out.println("Maven compile: " + outputFromCommand);
         System.out.println("Compile status: " + compileFlag);
-
+        return map;
     }
 
 
@@ -153,7 +161,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 extractedInfo = handleJSONObject(jsonObject);
                 String clone_url = extractedInfo.get("CloneUrl");
                 cloneRepo(clone_url,extractedInfo.get("BranchName"));
-                installAndCompileRepo();
+                extractedInfo = installAndCompileRepo(extractedInfo);
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
