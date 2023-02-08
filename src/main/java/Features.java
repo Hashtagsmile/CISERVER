@@ -7,7 +7,7 @@ public class Features {
     public static boolean testRepo(String repo) throws IOException {
         boolean testFlag = false;
         //Test
-        Process compileProcess = Runtime.getRuntime().exec("mvn test" + repo);
+        Process compileProcess = Runtime.getRuntime().exec("mvn test " + repo);
         try {
             compileProcess.waitFor();
         } catch (InterruptedException e) {
