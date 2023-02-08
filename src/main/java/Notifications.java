@@ -15,12 +15,12 @@ public class Notifications {
         connection.setRequestMethod("POST");
         //connection.setRequestProperty();
         //connection.setRequestProperty();
-        connection.setDoOutput(true); // converts the request to POST, because we want to send/output a request body
+        connection.setDoOutput(true); // // Triggers POST: converts the request to POST, because we want to send/output a request body
 
-        OutputStream outputStream = connection.getOutputStream();
-        byte[] input = postString.getBytes("utf-8"); //StandardCharsets.UTF_8
-        outputStream.write(input, 0, input.length);
-
+        try (OutputStream outputStream = connection.getOutputStream()) {
+            byte[] input = postString.getBytes("utf-8"); //StandardCharsets.UTF_8
+            outputStream.write(input, 0, input.length);
+        }
         connection.getInputStream();
     }
 
