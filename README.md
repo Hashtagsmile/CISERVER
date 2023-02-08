@@ -13,4 +13,4 @@ Oliver CI compile & build
 How to build 
 mvn install 
 mvn build
-test3 Issue2
+Status of build
