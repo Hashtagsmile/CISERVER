@@ -2,7 +2,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -65,6 +67,49 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
+    public void cloneRepo(String cloneUrl) throws IOException, InterruptedException {
+        String tempDir = " ./clonedRepo"; //This path can be changed
+        System.out.println("Temporary directory to clone to: " + tempDir);
+        System.out.println("Cloning repository...: " + cloneUrl);
+        String command = "git clone " + cloneUrl + tempDir;
+        String newCommand = command.replaceAll("\"", "");
+        System.out.println(newCommand);
+        Process process = Runtime.getRuntime().exec(newCommand);
+        process.waitFor();
+        if(process.exitValue() != 0){
+            System.out.println("Something went wrong with cloning the repo!");
+        }else {
+            System.out.println("Successfully cloned repository!");
+        }
+    }
+
+    public void installAndCompileRepo() throws IOException {
+        //Install
+        Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Maven install: " + process.exitValue());
+
+        //Compile
+        Process compileProcess = Runtime.getRuntime().exec("mvn compile -f " + "./clonedRepo");
+        try {
+            compileProcess.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
+        StringBuilder outputFromCommand = new StringBuilder();
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            outputFromCommand.append(line);
+        }
+        System.out.println("Maven compile: " + outputFromCommand);
+
+    }
+
 
     public void handle(String target,
                        Request baseRequest,
@@ -86,6 +131,9 @@ public class ContinuousIntegrationServer extends AbstractHandler
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
                 extractedInfo = handleJSONObject(jsonObject);
+                String clone_url = extractedInfo.get("CloneUrl");
+                cloneRepo(clone_url);
+                installAndCompileRepo();
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
@@ -95,6 +143,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         response.getWriter().println("CI job done");
     }
+
 
 
     // used to start the CI server in command line
