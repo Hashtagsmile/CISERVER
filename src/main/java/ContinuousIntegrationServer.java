@@ -28,7 +28,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
         // owner repo SHA commitId?
         try{
             //Retrieves the path of the branch
-            hm.put("BranchName", String.valueOf(jsonObject.get("ref")));
+            String branchName = jsonObject.get("ref").toString().substring(12).replaceAll("\"","");
+            hm.put("BranchName", branchName);
             } catch (Exception e) {
             throw new Exception("Something wrong with ref, error: " + e);
         }
@@ -67,11 +68,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
-    public void cloneRepo(String cloneUrl) throws IOException, InterruptedException {
+    public void cloneRepo(String cloneUrl, String branch) throws IOException, InterruptedException {
         String tempDir = " ./clonedRepo"; //This path can be changed
         System.out.println("Temporary directory to clone to: " + tempDir);
         System.out.println("Cloning repository...: " + cloneUrl);
-        String command = "git clone " + cloneUrl + tempDir;
+        String command = "git clone -b "+ branch + " "+ cloneUrl + tempDir;
         String newCommand = command.replaceAll("\"", "");
         System.out.println(newCommand);
         Process process = Runtime.getRuntime().exec(newCommand);
@@ -132,7 +133,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
                 extractedInfo = handleJSONObject(jsonObject);
                 String clone_url = extractedInfo.get("CloneUrl");
-                cloneRepo(clone_url);
+                cloneRepo(clone_url,extractedInfo.get("BranchName"));
                 installAndCompileRepo();
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);

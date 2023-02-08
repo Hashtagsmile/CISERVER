@@ -13,3 +13,4 @@ Oliver CI compile & build for cloned repository
 How to build 
 mvn install 
 mvn build
+test cloneBranch 
