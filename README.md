@@ -5,7 +5,7 @@ This project is about implementing a CI (Continuous Integration) server by subsc
 The CI server should send notifications whenever a push happens as well compile and run all tests on the branch where the push happened
 We will also write unit tests for these CI functionalities. 
 Dividing the work :
-Rabi 
+Rabi clone & build
 Alexander unit tests
 Hasti notification
 Oliver CI compile & build
