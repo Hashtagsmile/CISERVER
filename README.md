@@ -13,4 +13,4 @@ Oliver CI compile & build
 How to build 
 mvn install 
 mvn build
-notification test 7
+notification test 8
