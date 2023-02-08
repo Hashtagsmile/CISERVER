@@ -5,7 +5,9 @@ import javax.servlet.ServletException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -15,7 +17,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.google.gson.Gson;
-import org.eclipse.jetty.util.ajax.JSON;
 
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -23,6 +24,8 @@ import org.eclipse.jetty.util.ajax.JSON;
  */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
+    // Takes a JSON string as an input and converts it to a JSON object.
+    // Necessary properties/attributes are retrieved and stored in a hashmap
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
         HashMap<String, String> hm = new HashMap<>();
         // owner repo SHA commitId?
@@ -30,7 +33,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             //Retrieves the path of the branch
             String branchName = jsonObject.get("ref").toString().substring(12).replaceAll("\"","");
             hm.put("BranchName", branchName);
-            } catch (Exception e) {
+        } catch (Exception e) {
             throw new Exception("Something wrong with ref, error: " + e);
         }
         try{
@@ -68,13 +71,22 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
+    // Checks if the directory for the cloned repository exists, if it does it removes it
+    // otherwise it clones the repository to the directory.
     public void cloneRepo(String cloneUrl, String branch) throws IOException, InterruptedException {
         String tempDir = " ./clonedRepo"; //This path can be changed
-        System.out.println("Temporary directory to clone to: " + tempDir);
-        System.out.println("Cloning repository...: " + cloneUrl);
-        String command = "git clone -b "+ branch + " "+ cloneUrl + tempDir;
+        System.out.println("Repo cloned to following directory: " + tempDir);
+        System.out.println("The clone URL: " + cloneUrl);
+        System.out.println("Cloning repository... ");
+        String command = "git clone -b "+ branch+ " " + cloneUrl + tempDir;
         String newCommand = command.replaceAll("\"", "");
-        System.out.println(newCommand);
+        Path cloneDir = Paths.get("clonedRepo");
+        System.out.println("Path to cloneDir: " + cloneDir);
+        System.out.println("File exists: " + Files.exists(cloneDir));
+        if(Files.exists(cloneDir)){
+            Process process = Runtime.getRuntime().exec("rm -r clonedRepo");
+            process.waitFor();
+        }
         Process process = Runtime.getRuntime().exec(newCommand);
         process.waitFor();
         if(process.exitValue() != 0){
@@ -84,6 +96,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
     }
 
+    // Executes maven commands for installing and compiling the cloned repository
+    // Flags are used to check if the commands was successfull.
     public void installAndCompileRepo() throws IOException {
         //Install
         Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
@@ -104,10 +118,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
         BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
         StringBuilder outputFromCommand = new StringBuilder();
         String line = "";
+        boolean compileFlag = false;
         while ((line = reader.readLine()) != null) {
+            if(line.contains("SUCCESS")){
+                compileFlag = true;
+            }
             outputFromCommand.append(line);
         }
         System.out.println("Maven compile: " + outputFromCommand);
+        System.out.println("Compile status: " + compileFlag);
 
     }
 
