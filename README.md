@@ -8,8 +8,10 @@ Dividing the work :
 Rabi clone & build
 Alexander unit tests
 Hasti notification
-Oliver CI compile & build
+Oliver CI compile & build for cloned repository
 
 How to build 
 mvn install 
 mvn build
+test cloneBranch 
+testing if deleting directory works 3rd time.

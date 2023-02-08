@@ -5,7 +5,9 @@ import javax.servlet.ServletException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -15,7 +17,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.google.gson.Gson;
-import org.eclipse.jetty.util.ajax.JSON;
 
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -23,13 +24,16 @@ import org.eclipse.jetty.util.ajax.JSON;
  */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
+    // Takes a JSON string as an input and converts it to a JSON object.
+    // Necessary properties/attributes are retrieved and stored in a hashmap
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
         HashMap<String, String> hm = new HashMap<>();
         // owner repo SHA commitId?
         try{
             //Retrieves the path of the branch
-            hm.put("BranchName", String.valueOf(jsonObject.get("ref")));
-            } catch (Exception e) {
+            String branchName = jsonObject.get("ref").toString().substring(12).replaceAll("\"","");
+            hm.put("BranchName", branchName);
+        } catch (Exception e) {
             throw new Exception("Something wrong with ref, error: " + e);
         }
         try{
@@ -67,13 +71,22 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
-    public void cloneRepo(String cloneUrl) throws IOException, InterruptedException {
+    // Checks if the directory for the cloned repository exists, if it does it removes it
+    // otherwise it clones the repository to the directory.
+    public void cloneRepo(String cloneUrl, String branch) throws IOException, InterruptedException {
         String tempDir = " ./clonedRepo"; //This path can be changed
-        System.out.println("Temporary directory to clone to: " + tempDir);
-        System.out.println("Cloning repository...: " + cloneUrl);
-        String command = "git clone " + cloneUrl + tempDir;
+        System.out.println("Repo cloned to following directory: " + tempDir);
+        System.out.println("The clone URL: " + cloneUrl);
+        System.out.println("Cloning repository... ");
+        String command = "git clone -b "+ branch+ " " + cloneUrl + tempDir;
         String newCommand = command.replaceAll("\"", "");
-        System.out.println(newCommand);
+        Path cloneDir = Paths.get("clonedRepo");
+        System.out.println("Path to cloneDir: " + cloneDir);
+        System.out.println("File exists: " + Files.exists(cloneDir));
+        if(Files.exists(cloneDir)){
+            Process process = Runtime.getRuntime().exec("rm -r clonedRepo");
+            process.waitFor();
+        }
         Process process = Runtime.getRuntime().exec(newCommand);
         process.waitFor();
         if(process.exitValue() != 0){
@@ -83,7 +96,9 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
     }
 
-    public void installAndCompileRepo() throws IOException {
+    // Executes maven commands for installing and compiling the cloned repository
+    // Flags are used to check if the commands was successfull.
+    public HashMap<String,String> installAndCompileRepo(HashMap<String,String> map) throws IOException {
         //Install
         Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
         try {
@@ -103,11 +118,24 @@ public class ContinuousIntegrationServer extends AbstractHandler
         BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
         StringBuilder outputFromCommand = new StringBuilder();
         String line = "";
+        boolean compileFlag = false;
         while ((line = reader.readLine()) != null) {
+            if(line.contains("SUCCESS")){
+                compileFlag = true;
+                map.put("Status","Success");
+                System.out.println("status success");
+                break;
+            }
             outputFromCommand.append(line);
         }
-        System.out.println("Maven compile: " + outputFromCommand);
+           if (!compileFlag) {
+               map.put("Status", "Error");
+               System.out.println("status error");
+           }
 
+        System.out.println("Maven compile: " + outputFromCommand);
+        System.out.println("Compile status: " + compileFlag);
+        return map;
     }
 
 
@@ -132,8 +160,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
                 extractedInfo = handleJSONObject(jsonObject);
                 String clone_url = extractedInfo.get("CloneUrl");
-                cloneRepo(clone_url);
-                installAndCompileRepo();
+                cloneRepo(clone_url,extractedInfo.get("BranchName"));
+                extractedInfo = installAndCompileRepo(extractedInfo);
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
