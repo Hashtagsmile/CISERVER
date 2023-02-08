@@ -6,3 +6,4 @@ The CI server should send notifications whenever a push happens as well compile 
 We will also write unit tests for these CI functionalities. 
 Dividing the work :
 Rabi 
+Alexander
