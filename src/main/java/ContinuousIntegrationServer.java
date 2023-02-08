@@ -23,11 +23,27 @@ public class ContinuousIntegrationServer extends AbstractHandler
 {
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
         HashMap<String, String> hm = new HashMap<>();
+        // owner repo SHA commitId?
         try{
             //Retrieves the path of the branch
             hm.put("BranchName", String.valueOf(jsonObject.get("ref")));
             } catch (Exception e) {
             throw new Exception("Something wrong with ref, error: " + e);
+        }
+        try{
+            //Retrieves the name of the repo and its owner
+            JsonObject js = jsonObject.getAsJsonObject("repository");
+            hm.put("Repo", String.valueOf(js.get("name")));
+            hm.put("Owner", String.valueOf(js.getAsJsonObject("owner").get("name")));
+        } catch (Exception e) {
+            throw new Exception("Something wrong with Repo/owner name, error: " + e);
+        }
+        try{
+            //Retrieves the SHA number i.e head commit Id
+            hm.put("SHA", String.valueOf(jsonObject.getAsJsonObject("head_commit").get("id")));
+
+        } catch (Exception e) {
+            throw new Exception("Something wrong with SHA, error: " + e);
         }
         try{
             //Retrieves the clone url
@@ -73,6 +89,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
+
             System.out.println("JSON parsed: " + extractedInfo);
         }
 
