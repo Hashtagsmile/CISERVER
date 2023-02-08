@@ -18,12 +18,18 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import com.google.gson.Gson;
 
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
+
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
  See the Jetty documentation for API documentation of those classes.
  */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
+    private Notifications notif;
     // Takes a JSON string as an input and converts it to a JSON object.
     // Necessary properties/attributes are retrieved and stored in a hashmap
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
@@ -39,14 +45,14 @@ public class ContinuousIntegrationServer extends AbstractHandler
         try{
             //Retrieves the name of the repo and its owner
             JsonObject js = jsonObject.getAsJsonObject("repository");
-            hm.put("Repo", String.valueOf(js.get("name")));
-            hm.put("Owner", String.valueOf(js.getAsJsonObject("owner").get("name")));
+            hm.put("Repo", js.get("name").toString().replaceAll("\"",""));
+            hm.put("Owner", js.getAsJsonObject("owner").get("name").toString().replaceAll("\"",""));
         } catch (Exception e) {
             throw new Exception("Something wrong with Repo/owner name, error: " + e);
         }
         try{
             //Retrieves the SHA number i.e head commit Id
-            hm.put("SHA", String.valueOf(jsonObject.getAsJsonObject("head_commit").get("id")));
+            hm.put("SHA", jsonObject.get("after").toString().replaceAll("\"",""));
 
         } catch (Exception e) {
             throw new Exception("Something wrong with SHA, error: " + e);
@@ -59,11 +65,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
         try {
             //Retrieve commits information
-            JsonArray commitsArray = jsonObject.getAsJsonArray("commits");
-            hm.put("Message", String.valueOf(commitsArray.get(0).getAsJsonObject().get("message")));
-            hm.put("Timestamp", String.valueOf(commitsArray.get(0).getAsJsonObject().get("timestamp")));
-            hm.put("Author", String.valueOf(commitsArray.get(0).getAsJsonObject().get("author").getAsJsonObject().get("name")));
-            hm.put("Modified", String.valueOf(commitsArray.get(0).getAsJsonObject().get("modified")));
+            JsonObject commitsArray = jsonObject.getAsJsonObject("head_commit");
+            hm.put("Message", String.valueOf(commitsArray.get("message")));
+            hm.put("Head_Id", String.valueOf(commitsArray.get("id")));
+            hm.put("Timestamp", String.valueOf(commitsArray.get("timestamp")));
+            hm.put("Author", String.valueOf(commitsArray.getAsJsonObject("committer").get("name")));
         } catch (Exception e){
             throw new Exception("Something wrong with commits info, error: " + e);
         }
@@ -138,6 +144,51 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return map;
     }
 
+    public void sendNotificationMail(HashMap<String,String> jsonInfo){
+         String username = "group8dd2480@gmail.com";
+         String password = "zord ozat wont oqtf";
+
+        Properties prop = new Properties();
+        prop.put("mail.smtp.host", "smtp.gmail.com");
+        prop.put("mail.smtp.port", "587");
+        prop.put("mail.smtp.auth", "true");
+        prop.put("mail.smtp.starttls.enable", "true"); //TLS
+
+        Session session = Session.getDefaultInstance(prop,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username, password);
+                    }
+                });
+
+        try {
+            String committer = jsonInfo.get("Author");
+            String commitId = jsonInfo.get("Head_Id");
+            String branch = jsonInfo.get("BranchName");
+            String timestamp = jsonInfo.get("Timestamp");
+            String status = jsonInfo.get("Status");
+
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("group8dd2480@gmail.com"));
+            message.setRecipients(
+                    Message.RecipientType.TO,
+                    InternetAddress.parse("rabihanna007@gmail.com, miltonlindblad@gmail.com, hastimazadeh@gmail.com, alex.binett@hotmail.com")
+            );
+            message.setSubject("Push Status");
+
+                message.setText("Committer : " + committer + "\n" + "CommitId : " + commitId + "\n" + "Timestamp : " +timestamp + "\n" +"Branch : " + branch + "\n" + "Status : "+ status);
+
+
+
+            Transport.send(message);
+
+            System.out.println("Done");
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void handle(String target,
                        Request baseRequest,
@@ -155,6 +206,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         String reqString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         HashMap<String, String> extractedInfo = new HashMap<String, String>();
+        notif = new Notifications();
         if(!reqString.isEmpty()) {
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
@@ -162,6 +214,12 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 String clone_url = extractedInfo.get("CloneUrl");
                 cloneRepo(clone_url,extractedInfo.get("BranchName"));
                 extractedInfo = installAndCompileRepo(extractedInfo);
+                /*notif.post_status(extractedInfo.get("Owner"),
+                        extractedInfo.get("Repo"),
+                        extractedInfo.get("SHA"),
+                        extractedInfo.get("Status"),
+                        "Placeholder Description", "", "");*/
+                sendNotificationMail(extractedInfo);
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
