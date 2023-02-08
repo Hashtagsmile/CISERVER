@@ -124,12 +124,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 compileFlag = true;
                 map.put("Status","Success");
                 System.out.println("status success");
-            }else {
-                map.put("Status","Error");
-                System.out.println("status error");
+                break;
             }
             outputFromCommand.append(line);
         }
+           if (!compileFlag) {
+               map.put("Status", "Error");
+               System.out.println("status error");
+           }
+
         System.out.println("Maven compile: " + outputFromCommand);
         System.out.println("Compile status: " + compileFlag);
         return map;
