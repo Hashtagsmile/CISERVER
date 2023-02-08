@@ -9,8 +9,5 @@
         <module name="CI_SERVER" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="CI_SERVER" target="8" />
-    </bytecodeTargetLevel>
   </component>
 </project>
