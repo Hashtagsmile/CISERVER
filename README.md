@@ -11,4 +11,5 @@ Hasti notification
 Oliver CI compile & build
 
 How to build 
-mvn install
+mvn install 
+mvn build
