@@ -15,3 +15,4 @@ mvn install
 mvn build
 test cloneBranch 
 testing if deleting directory works 3rd time.
+testing testfunc
