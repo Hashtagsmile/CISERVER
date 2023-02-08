@@ -7,5 +7,5 @@ We will also write unit tests for these CI functionalities.
 Dividing the work :
 Rabi 
 Alexander
-Hasti
+Hasti notification
 Oliver CI compile & build
