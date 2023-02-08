@@ -1,6 +1,7 @@
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class Notifications {
@@ -11,15 +12,17 @@ public class Notifications {
 
         // inspired from: https://stackoverflow.com/questions/28114663/java-httpurlconnection-setrequestmethod-doesnt-work
 
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        // URLConnection connection = new URL(url).openConnection();
+
         connection.setRequestMethod("POST");
-        //connection.setRequestProperty();
-        //connection.setRequestProperty();
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Accept", "application/json");
         connection.setDoOutput(true); // // Triggers POST: converts the request to POST, because we want to send/output a request body
 
-        try (OutputStream outputStream = connection.getOutputStream()) {
+        try (OutputStream output = connection.getOutputStream()) {
             byte[] input = postString.getBytes("utf-8"); //StandardCharsets.UTF_8
-            outputStream.write(input, 0, input.length);
+            output.write(input, 0, input.length);
         }
         connection.getInputStream();
     }
