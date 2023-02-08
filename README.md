@@ -9,3 +9,5 @@ Rabi clone & build
 Alexander unit tests
 Hasti notification
 Oliver CI compile & build
+
+How to build 
