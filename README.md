@@ -14,3 +14,4 @@ How to build
 mvn install 
 mvn build
 notification test 11
+test 12
