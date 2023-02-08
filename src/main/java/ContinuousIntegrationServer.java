@@ -146,7 +146,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     public void sendNotificationMail(HashMap<String,String> jsonInfo){
          String username = "group8dd2480@gmail.com";
-         String password = "group8group8";
+         String password = "zord ozat wont oqtf";
 
         Properties prop = new Properties();
         prop.put("mail.smtp.host", "smtp.gmail.com");
@@ -154,7 +154,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         prop.put("mail.smtp.auth", "true");
         prop.put("mail.smtp.starttls.enable", "true"); //TLS
 
-        Session session = Session.getInstance(prop,
+        Session session = Session.getDefaultInstance(prop,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(username, password);
@@ -172,11 +172,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
             message.setFrom(new InternetAddress("group8dd2480@gmail.com"));
             message.setRecipients(
                     Message.RecipientType.TO,
-                    InternetAddress.parse("rabihanna007@gmail.com, miltonlindblad@gmail.com")
+                    InternetAddress.parse("rabihanna007@gmail.com, miltonlindblad@gmail.com, hastimazadeh@gmail.com, alex.binett@hotmail.com")
             );
             message.setSubject("Push Status");
 
-                message.setText("Committer : " + committer + "\n" + "CommitId : " + commitId + "\n" + "Timestamp : " +timestamp + "\n" +"Branch : " + branch + "Status : "+ status);
+                message.setText("Committer : " + committer + "\n" + "CommitId : " + commitId + "\n" + "Timestamp : " +timestamp + "\n" +"Branch : " + branch + "\n" + "Status : "+ status);
 
 
 
