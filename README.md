@@ -14,4 +14,4 @@ How to build
 mvn install 
 mvn build
 test cloneBranch 
-testing if deleting directory works.
+testing if deleting directory works second time. 
