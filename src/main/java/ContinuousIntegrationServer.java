@@ -40,14 +40,14 @@ public class ContinuousIntegrationServer extends AbstractHandler
         try{
             //Retrieves the name of the repo and its owner
             JsonObject js = jsonObject.getAsJsonObject("repository");
-            hm.put("Repo", String.valueOf(js.get("name")));
-            hm.put("Owner", String.valueOf(js.getAsJsonObject("owner").get("name")));
+            hm.put("Repo", js.get("name").toString().replaceAll("\"",""));
+            hm.put("Owner", js.getAsJsonObject("owner").get("name").toString().replaceAll("\"",""));
         } catch (Exception e) {
             throw new Exception("Something wrong with Repo/owner name, error: " + e);
         }
         try{
             //Retrieves the SHA number i.e head commit Id
-            hm.put("SHA", String.valueOf(jsonObject.getAsJsonObject("head_commit").get("id")));
+            hm.put("SHA", jsonObject.get("after").toString().replaceAll("\"",""));
 
         } catch (Exception e) {
             throw new Exception("Something wrong with SHA, error: " + e);
@@ -168,7 +168,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
                         extractedInfo.get("Repo"),
                         extractedInfo.get("SHA"),
                         extractedInfo.get("Status"),
-                        "Placeholder Description");
+                        "Placeholder Description", "", "");
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
