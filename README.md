@@ -18,3 +18,4 @@ testing if deleting directory works 3rd time.
 testing testfunc
 testing testfunc 2
 testing testfunc 3
+testing testfunc 4
