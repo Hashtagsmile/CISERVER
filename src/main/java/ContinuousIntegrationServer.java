@@ -234,6 +234,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         //do the tests
         if(compRes){
             testRes = Features.testRepo("./clonedRepo");
+            System.out.println("Compilation" + compRes + ". Testing " + testRes);
             if(!testRes){
                 response.getWriter().println("Tests failed");
             }
