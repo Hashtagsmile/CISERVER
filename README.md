@@ -19,3 +19,4 @@ testing testfunc
 testing testfunc 2
 testing testfunc 3
 testing testfunc 4
+testing testfunc 5
