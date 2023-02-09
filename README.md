@@ -16,6 +16,9 @@ This project is about implementing a CI (Continuous Integration) server by subsc
         └── java
             └── Testing.java
 ```
+`ContinousIntegrationServer` include the main method.
+The test folder contains the unit-tests for this project.
+
 ## Tutorial
 
 #### Required software
@@ -25,6 +28,14 @@ This project is about implementing a CI (Continuous Integration) server by subsc
 #### Run Test Cases
 
 ## Contributions
+|  Name | Contribution | Issues |
+|:-------|:--------|:--------|
+| | | |
+| | | |
+| | | |
+| | | |
+| | | |
+Pull requests were regularly done and were reviewed before merging with the remote main.
 
 #### Commit Prefixes
 `feat`
