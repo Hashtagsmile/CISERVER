@@ -7,14 +7,14 @@ public class Features {
     public static boolean testRepo(String repo) throws IOException {
         boolean testFlag = false;
         //Test
-        Process compileProcess = Runtime.getRuntime().exec("mvn test " + repo);
+        Process testProcess = Runtime.getRuntime().exec("mvn test " + repo);
         try {
-            compileProcess.waitFor();
+            testProcess.waitFor();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         String line = "";
-        BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(testProcess.getInputStream()));
         while ((line = reader.readLine()) != null) {
             if(line.contains("BUILD SUCCESS")){
                 testFlag = true;

@@ -1,19 +1,29 @@
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
+import java.io.IOException;
 
 public class Testing {
 
     @Test
     public void posTest(){
-        boolean test = testRepo("./simpleprojects/PosCompPosTest");
-        assertTrue(test);
+        try{
+            boolean test = Features.testRepo("./simpleprojects/PosCompPosTest");
+            assertTrue(test);
+        }
+        catch(IOException e){
+            System.out.println("IOException in posTest");
+        }
     }
 
     @Test
     public void negTest(){
-        boolean test = testRepo("./simpleprojects/PosCompNegTest");
-        assertFalse(test);
+        try{
+            boolean test = Features.testRepo("./simpleprojects/PosCompNegTest");
+            assertFalse(test);
+        }
+        catch(IOException e){
+            System.out.println("IOException in negTest");
+        }
     }
 }
