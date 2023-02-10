@@ -79,7 +79,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     // Checks if the directory for the cloned repository exists, if it does it removes it
     // otherwise it clones the repository to the directory.
-    public void cloneRepo(String cloneUrl, String branch) throws IOException, InterruptedException {
+    public void cloneRepo(String cloneUrl, String branch) {
         String tempDir = " ./clonedRepo"; //This path can be changed
         System.out.println("Repo cloned to following directory: " + tempDir);
         System.out.println("The clone URL: " + cloneUrl);
@@ -89,107 +89,23 @@ public class ContinuousIntegrationServer extends AbstractHandler
         Path cloneDir = Paths.get("clonedRepo");
         System.out.println("Path to cloneDir: " + cloneDir);
         System.out.println("File exists: " + Files.exists(cloneDir));
-        if(Files.exists(cloneDir)){
-            Process process = Runtime.getRuntime().exec("rm -r clonedRepo");
-            process.waitFor();
-        }
-        Process process = Runtime.getRuntime().exec(newCommand);
-        process.waitFor();
-        if(process.exitValue() != 0){
-            System.out.println("Something went wrong with cloning the repo!");
-        }else {
-            System.out.println("Successfully cloned repository!");
-        }
-    }
-
-    // Executes maven commands for installing and compiling the cloned repository
-    // Flags are used to check if the commands was successfull.
-    public HashMap<String,String> installAndCompileRepo(HashMap<String,String> map) throws IOException {
-
-        //Compile
-        Process compileProcess = Runtime.getRuntime().exec("mvn compile -f " + "./clonedRepo");
-        try {
-            compileProcess.waitFor();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
-        StringBuilder outputFromCommand = new StringBuilder();
-        String line = "";
-        boolean compileFlag = false;
-        //System.out.println("Standard output[mvn compile]:");
-        while ((line = reader.readLine()) != null) {
-            //System.out.println(line);
-            if(line.contains("SUCCESS")){
-                compileFlag = true;
-                map.put("Status","Success");
-                System.out.println("status success");
-                break;
+        try{
+            if(Files.exists(cloneDir)){
+                Process process = Runtime.getRuntime().exec("rm -r clonedRepo");
+                process.waitFor();
             }
-            outputFromCommand.append(line);
+            Process process = Runtime.getRuntime().exec(newCommand);
+            process.waitFor();
+            if(process.exitValue() != 0){
+                System.out.println("Something went wrong with cloning the repo!");
+            }else {
+                System.out.println("Successfully cloned repository!");
+            }
         }
-           if (!compileFlag) {
-               map.put("Status", "Error");
-               System.out.println("status error");
-           }
-
-        //System.out.println("Maven compile: " + outputFromCommand);
-        System.out.println("Compile status: " + compileFlag);
-
-//        //Install
-//        Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
-//        try {
-//            process.waitFor();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        System.out.println("Maven install: " + process.exitValue());
-        return map;
-    }
-
-    public void sendNotificationMail(HashMap<String,String> jsonInfo){
-         String username = "group8dd2480@gmail.com";
-         String password = "zord ozat wont oqtf";
-
-        Properties prop = new Properties();
-        prop.put("mail.smtp.host", "smtp.gmail.com");
-        prop.put("mail.smtp.port", "587");
-        prop.put("mail.smtp.auth", "true");
-        prop.put("mail.smtp.starttls.enable", "true"); //TLS
-
-        Session session = Session.getDefaultInstance(prop,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
-                    }
-                });
-
-        try {
-            String committer = jsonInfo.get("Author");
-            String commitId = jsonInfo.get("Head_Id");
-            String branch = jsonInfo.get("BranchName");
-            String timestamp = jsonInfo.get("Timestamp");
-            String status = jsonInfo.get("Status");
-
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("group8dd2480@gmail.com"));
-            message.setRecipients(
-                    Message.RecipientType.TO,
-                    InternetAddress.parse("rabihanna007@gmail.com, miltonlindblad@gmail.com, hastimazadeh@gmail.com, alex.binett@hotmail.com")
-            );
-            message.setSubject("Push Status");
-
-                message.setText("Committer : " + committer + "\n" + "CommitId : " + commitId + "\n" + "Timestamp : " +timestamp + "\n" +"Branch : " + branch + "\n" + "Status : "+ status);
-
-
-
-            Transport.send(message);
-
-            System.out.println("Done");
-
-        } catch (MessagingException e) {
-            e.printStackTrace();
+        catch(Exception e){
+            System.out.println("When cloning: IOException from exec, or InterruptedException from waitFor");
         }
+
     }
 
 
@@ -209,49 +125,44 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         String reqString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         HashMap<String, String> extractedInfo = new HashMap<String, String>();
-        notif = new Notifications();
         if(!reqString.isEmpty()) {
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
                 extractedInfo = handleJSONObject(jsonObject);
-                String clone_url = extractedInfo.get("CloneUrl");
-                cloneRepo(clone_url,extractedInfo.get("BranchName"));
-                extractedInfo = installAndCompileRepo(extractedInfo);
-                /*notif.post_status(extractedInfo.get("Owner"),
-                        extractedInfo.get("Repo"),
-                        extractedInfo.get("SHA"),
-                        extractedInfo.get("Status"),
-                        "Placeholder Description", "", "");*/
-                sendNotificationMail(extractedInfo);
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
 
             System.out.println("JSON parsed: " + extractedInfo);
         }
+
+        String absolutePath = System.getProperty("user.dir");
+        String clone_url = extractedInfo.get("CloneUrl");
+        cloneRepo(clone_url,extractedInfo.get("BranchName"));
+        extractedInfo = Features.compileRepo(extractedInfo, absolutePath + "/clonedRepo");
         boolean compRes = false;
         boolean testRes = false;
         if(extractedInfo.containsKey("Status")){
             compRes = extractedInfo.get("Status").equals("Success");
         }
-        String absolutePath = System.getProperty("user.dir");
         //do the tests
         if(compRes){
-            System.out.println("IN IF STATEMENT");
             testRes = Features.testRepo(absolutePath + "/clonedRepo");
             if(!testRes){
-                System.out.println("tests failed");
                 response.getWriter().println("Tests failed");
+                extractedInfo.put("TestStatus", "Failed");
             }
             else{
-                System.out.println("CI job done");
                 response.getWriter().println("CI job done");
+                extractedInfo.put("TestStatus", "Success");
             }
         }
         else{
-            System.out.println("comp failed");
             response.getWriter().println("Compilation failed");
+            extractedInfo.put("TestStatus", "Not run");
         }
+
+        Features.sendNotificationMail(extractedInfo);
     }
 
 
