@@ -18,7 +18,9 @@ This project is about implementing a CI (Continuous Integration) server by subsc
             └── Testing.java
 ```
 `ContinousIntegrationServer` include the main method.
+
 The test folder contains the unit-tests for this project.
+
 The `simpleprojects` directory contains several small projects that are used for testing the CI server.
 
 ## Tutorial
@@ -32,20 +34,19 @@ In order to use this CI with your github project you need to link github to the 
 #### Run and build the program
 To run and build the program, enter ` ` in the terminal.
 
-#### Test Cases
+## Test Cases
 The program also has test cases for the `features` class.
 The program has test cases for CI futures which are in the `features` class.
 These test cases are used on `simpleprojects` to test the server's `testing` and `compilation`.
 
-
 ## Contributions
-|  Name | Contribution | Issues |
-|:-------|:--------|:--------|
+|  Name | Contribution |
+|:-------|:--------|
 |Oliver Lindblad| | |
-|Alexander Binett | Implemenetig tesdting and features class| |
-|Rabi Hanna	| | |
-|Hasti Mohebali Zadeh| implmented notifications class and README| |
-| | | |
+|Alexander Binett | Implemenetig tesdting and features class|
+|Rabi Hanna	| |
+|Hasti Mohebali Zadeh| Implmented notifications and README|
+| | |
 
 Pull requests were regularly done and were reviewed before merging with the remote main.
 
