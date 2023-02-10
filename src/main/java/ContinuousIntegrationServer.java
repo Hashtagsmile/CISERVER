@@ -127,41 +127,41 @@ public class ContinuousIntegrationServer extends AbstractHandler
             try {
                 JsonObject jsonObject = new Gson().fromJson(reqString, JsonObject.class);
                 extractedInfo = handleJSONObject(jsonObject);
+                String absolutePath = System.getProperty("user.dir");
+                String clone_url = extractedInfo.get("CloneUrl");
+                cloneRepo(clone_url,extractedInfo.get("BranchName"));
+                extractedInfo = Features.compileRepo(extractedInfo, absolutePath + "/clonedRepo");
+                boolean compRes = false;
+                if(extractedInfo.containsKey("Status")){
+                    compRes = extractedInfo.get("Status").equals("Success");
+                }
+                System.out.println("Compile status: " + extractedInfo.get("Status"));
+                //do the tests
+                if(compRes){
+                    boolean testRes = Features.testRepo(absolutePath + "/clonedRepo");
+                    if(!testRes){
+                        response.getWriter().println("Tests failed");
+                        extractedInfo.put("TestStatus", "Failed");
+                    }
+                    else{
+                        response.getWriter().println("Compilation and testing succeeded");
+                        extractedInfo.put("TestStatus", "Success");
+                    }
+                }
+                else{
+                    response.getWriter().println("Compilation failed");
+                    extractedInfo.put("TestStatus", "Not run");
+                }
+                System.out.println("Tests status: " + extractedInfo.get("TestStatus"));
+
+                Features.sendNotificationMail(extractedInfo);
+
             } catch (Exception e) {
                 throw new RuntimeException("Error when calling handleJSON, error: " + e);
             }
 
             System.out.println("JSON parsed: " + extractedInfo);
         }
-
-        String absolutePath = System.getProperty("user.dir");
-        String clone_url = extractedInfo.get("CloneUrl");
-        cloneRepo(clone_url,extractedInfo.get("BranchName"));
-        extractedInfo = Features.compileRepo(extractedInfo, absolutePath + "/clonedRepo");
-        boolean compRes = false;
-        if(extractedInfo.containsKey("Status")){
-            compRes = extractedInfo.get("Status").equals("Success");
-        }
-        System.out.println("Compile status: " + extractedInfo.get("Status"));
-        //do the tests
-        if(compRes){
-            boolean testRes = Features.testRepo(absolutePath + "/clonedRepo");
-            if(!testRes){
-                response.getWriter().println("Tests failed");
-                extractedInfo.put("TestStatus", "Failed");
-            }
-            else{
-                response.getWriter().println("CI job done");
-                extractedInfo.put("TestStatus", "Success");
-            }
-        }
-        else{
-            response.getWriter().println("Compilation failed");
-            extractedInfo.put("TestStatus", "Not run");
-        }
-        System.out.println("Tests status: " + extractedInfo.get("TestStatus"));
-
-        Features.sendNotificationMail(extractedInfo);
     }
 
 
