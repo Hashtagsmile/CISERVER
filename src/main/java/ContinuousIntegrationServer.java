@@ -105,14 +105,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
     // Executes maven commands for installing and compiling the cloned repository
     // Flags are used to check if the commands was successfull.
     public HashMap<String,String> installAndCompileRepo(HashMap<String,String> map) throws IOException {
-        //Install
-        Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
-        try {
-            process.waitFor();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Maven install: " + process.exitValue());
 
         //Compile
         Process compileProcess = Runtime.getRuntime().exec("mvn compile -f " + "./clonedRepo");
@@ -125,7 +117,9 @@ public class ContinuousIntegrationServer extends AbstractHandler
         StringBuilder outputFromCommand = new StringBuilder();
         String line = "";
         boolean compileFlag = false;
+        //System.out.println("Standard output[mvn compile]:");
         while ((line = reader.readLine()) != null) {
+            //System.out.println(line);
             if(line.contains("SUCCESS")){
                 compileFlag = true;
                 map.put("Status","Success");
@@ -139,8 +133,17 @@ public class ContinuousIntegrationServer extends AbstractHandler
                System.out.println("status error");
            }
 
-        System.out.println("Maven compile: " + outputFromCommand);
+        //System.out.println("Maven compile: " + outputFromCommand);
         System.out.println("Compile status: " + compileFlag);
+
+//        //Install
+//        Process process = Runtime.getRuntime().exec("mvn install -f " + "./clonedRepo");
+//        try {
+//            process.waitFor();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        System.out.println("Maven install: " + process.exitValue());
         return map;
     }
 
@@ -231,17 +234,22 @@ public class ContinuousIntegrationServer extends AbstractHandler
         if(extractedInfo.containsKey("Status")){
             compRes = extractedInfo.get("Status").equals("Success");
         }
+        String absolutePath = System.getProperty("user.dir");
         //do the tests
         if(compRes){
-            testRes = Features.testRepo("./clonedRepo");
+            System.out.println("IN IF STATEMENT");
+            testRes = Features.testRepo(absolutePath + "/clonedRepo");
             if(!testRes){
+                System.out.println("tests failed");
                 response.getWriter().println("Tests failed");
             }
             else{
+                System.out.println("CI job done");
                 response.getWriter().println("CI job done");
             }
         }
         else{
+            System.out.println("comp failed");
             response.getWriter().println("Compilation failed");
         }
     }
