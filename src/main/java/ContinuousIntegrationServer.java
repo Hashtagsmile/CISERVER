@@ -29,12 +29,10 @@ import java.util.Properties;
  */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
-    private Notifications notif;
     // Takes a JSON string as an input and converts it to a JSON object.
     // Necessary properties/attributes are retrieved and stored in a hashmap
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
         HashMap<String, String> hm = new HashMap<>();
-        // owner repo SHA commitId?
         try{
             //Retrieves the path of the branch
             String branchName = jsonObject.get("ref").toString().substring(12).replaceAll("\"","");
@@ -77,17 +75,17 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
-    // Checks if the directory for the cloned repository exists, if it does it removes it
+    // Checks if the directory for the cloned repository exists, if it does, it removes it
     // otherwise it clones the repository to the directory.
     public void cloneRepo(String cloneUrl, String branch) {
-        String tempDir = " ./clonedRepo"; //This path can be changed
-        System.out.println("Repo cloned to following directory: " + tempDir);
+        String absPath = System.getProperty("user.dir");
+        String tempDir = "/clonedRepo"; //This path can be changed
+        System.out.println("Repo cloned to following directory: " + absPath + tempDir);
         System.out.println("The clone URL: " + cloneUrl);
         System.out.println("Cloning repository... ");
-        String command = "git clone -b "+ branch+ " " + cloneUrl + tempDir;
+        String command = "git clone -b "+ branch+ " " + cloneUrl + " ." + tempDir;
         String newCommand = command.replaceAll("\"", "");
         Path cloneDir = Paths.get("clonedRepo");
-        System.out.println("Path to cloneDir: " + cloneDir);
         System.out.println("File exists: " + Files.exists(cloneDir));
         try{
             if(Files.exists(cloneDir)){
@@ -141,13 +139,13 @@ public class ContinuousIntegrationServer extends AbstractHandler
         cloneRepo(clone_url,extractedInfo.get("BranchName"));
         extractedInfo = Features.compileRepo(extractedInfo, absolutePath + "/clonedRepo");
         boolean compRes = false;
-        boolean testRes = false;
         if(extractedInfo.containsKey("Status")){
             compRes = extractedInfo.get("Status").equals("Success");
         }
+        System.out.println("Compile status: " + extractedInfo.get("Status"));
         //do the tests
         if(compRes){
-            testRes = Features.testRepo(absolutePath + "/clonedRepo");
+            boolean testRes = Features.testRepo(absolutePath + "/clonedRepo");
             if(!testRes){
                 response.getWriter().println("Tests failed");
                 extractedInfo.put("TestStatus", "Failed");
@@ -161,6 +159,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             response.getWriter().println("Compilation failed");
             extractedInfo.put("TestStatus", "Not run");
         }
+        System.out.println("Tests status: " + extractedInfo.get("TestStatus"));
 
         Features.sendNotificationMail(extractedInfo);
     }

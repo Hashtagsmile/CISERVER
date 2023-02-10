@@ -34,9 +34,6 @@ public class Features {
         if (!compileFlag) {
             map.put("Status", "Error");
         }
-
-        System.out.println("Compile status: " + compileFlag);
-
         return map;
     }
 
@@ -59,7 +56,6 @@ public class Features {
                 break;
             }
         }
-        System.out.println("Tests status: " + testFlag + ". REPO: " + repo);
         return testFlag;
     }
 
