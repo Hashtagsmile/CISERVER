@@ -28,13 +28,20 @@ The `Team_Evaluation.pdf` is the document containing the team evaluation based o
 
 ## Tutorial
 
+#### Required software
+* latest version of IntelliJ IDEA
+
 #### Setup Github for Webhook
 In order to use this CI with your github project you need to link github to the computer you run the software on.
 * Go to the github repository you want to link to the CI and then go to `Settings >> Webhooks`, click on `Add webhook`.
 * In `Payload URL` enter the forwarding URL (eg `http://8929b010.ngrok.io`) and click on `Add webhook`. 
 
 #### Run and build the program
-To run and build the program, enter ` ` in the terminal.
+To run and build the program, 
+* Open your project on IntelliJ IDEA
+* Click on the `Build Project` (hammer) icon
+* Open IDEA terminal and navigate to `src/main/java` directory
+* Enter `ngrok http 8080`
 
 ## Test Cases
 The program also has test cases for the `features` class.
@@ -44,10 +51,12 @@ These test cases are used on `simpleprojects` to test the server's `testing` and
 ## Contributions
 |  Name | Contribution |
 |:-------|:--------|
-|Oliver Lindblad| | |
+|Oliver Lindblad| Implemented handle json, clone, install and compile repository functioncs|
 |Alexander Binett |Implemented testing and features class|
-|Rabi Hanna	| |
-|Hasti Mohebali Zadeh|Implmented notifications and README|
+|Rabi Hanna	| Implemented handle json, clone, install and compile repository functioncs and email notification|
+|Hasti Mohebali Zadeh|Implmented notifications function and README file|
+
+Team members worked on several assignments together as well through pair-programming.
 
 Pull requests were regularly done and were reviewed before merging with the remote main.
 
