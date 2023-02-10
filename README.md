@@ -1,6 +1,6 @@
 # Continuous Integration (CI) Assignment
 ##### The assignment done by group 8 for the course DD2480 Software Engineering Fundamentals.
-This project is about implementing a CI (Continuous Integration) server by subscribing to GitHub's built-in webhooks. The CI server should send notifications whenever a push happens and compile and run all tests on the branch where the push happened.
+This project is about implementing a CI (Continuous Integration) server by subscribing to GitHub's built-in webhooks. The CI server should send notifications whenever a push happens and compile and run all tests on the branch where the push happened. The CI server supports executing the automated tests.
 
 ## Files structure
 ```bash
