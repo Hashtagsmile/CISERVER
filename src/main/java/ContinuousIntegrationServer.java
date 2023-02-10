@@ -26,11 +26,18 @@ import java.util.Properties;
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
  See the Jetty documentation for API documentation of those classes.
+ The skeleton found at: https://github.com/KTH-DD2480/smallest-java-ci
+ The skeleton was expanded and extra functionality and functions was added.
  */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
-    // Takes a JSON string as an input and converts it to a JSON object.
-    // Necessary properties/attributes are retrieved and stored in a hashmap
+    /**
+     * This method takes an JSON object and retrieves certain
+     * properties and their values as key-value pairs in a
+     * hashmap.
+     * @param jsonObject A JSON object to be handled
+     * @return hm The hashmap representation of the JSON object
+     */
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
         HashMap<String, String> hm = new HashMap<>();
         try{
@@ -75,8 +82,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return hm;
     }
 
-    // Checks if the directory for the cloned repository exists, if it does, it removes it
-    // otherwise it clones the repository to the directory.
+    /**
+     * This method clones a specific branch of a repository.
+     * It stores the repository in a temporary directory,
+     * if the directory isnt empty it deletes it and creates
+     * a new one each run.
+     * @param cloneUrl The url of the repository
+     * @param branch A The branch name
+     * @return void
+     */
     public void cloneRepo(String cloneUrl, String branch) {
         String absPath = System.getProperty("user.dir");
         String tempDir = "/clonedRepo"; //This path can be changed
@@ -106,7 +120,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     }
 
-
+    /**
+     * This method handles the HTTP request from the github
+     * webbhook.
+     * @param target The target string
+     * @param baseRequest The unwrapped base request
+     * @param request The HTTP request
+     * @param response The HTTP response
+     * @return void
+     */
     public void handle(String target,
                        Request baseRequest,
                        HttpServletRequest request,
