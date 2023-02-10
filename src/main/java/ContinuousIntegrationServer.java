@@ -38,8 +38,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param jsonObject A JSON object to be handled
      * @return hm The hashmap representation of the JSON object
      */
-    // Takes a JSON string as an input and converts it to a JSON object.
-    // Necessary properties/attributes are retrieved and stored in a hashmap
     public HashMap<String, String> handleJSONObject(JsonObject jsonObject) throws Exception {
         HashMap<String, String> hm = new HashMap<>();
         try{
