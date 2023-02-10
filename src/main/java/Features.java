@@ -10,8 +10,13 @@ import java.util.Properties;
 
 public class Features {
 
-    // Executes maven commands for installing and compiling the cloned repository
-    // Flags are used to check if the commands was successful.
+    /**
+     * Executes maven commands for installing and compiling the cloned repository.
+     * Flags are used to check if the commands was successful.
+     * @param map A hashmap with JSON object values
+     * @param repo The name of the repo
+     * @return map The hashmap with updated Status value
+     */
     public static HashMap<String,String> compileRepo(HashMap<String,String> map, String repo) throws IOException {
 
         //Compile
@@ -37,6 +42,12 @@ public class Features {
         return map;
     }
 
+
+    /**
+     * This method runs the maven tests and sets a testflag.
+     * @param repo The URL of the repo
+     * @return testFlag Boolean to indicate success or failure
+     */
     public static boolean testRepo(String repo) throws IOException {
         boolean testFlag = false;
         Process testProcess = Runtime.getRuntime().exec("mvn test", null, new File(repo));
@@ -59,6 +70,12 @@ public class Features {
         return testFlag;
     }
 
+    /**
+     * This method sends an email to the members of the repository
+     * with information about the latest push.
+     * @param map jsonInfo The hashMap containing information about the push
+     * @return void
+     */
     public static void sendNotificationMail(HashMap<String,String> jsonInfo){
         String username = "group8dd2480@gmail.com";
         String password = "zord ozat wont oqtf";
